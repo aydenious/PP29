@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Output files
+output/
+*.xlsx
+*.xls
+
+# Database
+data/*.db
+
+# Logs
+logs/
+*.log
+
+# Config (may contain local paths)
+config.json
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

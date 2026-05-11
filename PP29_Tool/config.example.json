@@ -1,0 +1,44 @@
+{
+    "_comment": "===========================================================",
+    "_comment2": " PP29 Configuration - EDIT THESE PATHS FOR YOUR ENVIRONMENT",
+    "_comment3": " Copy this file to config.json and update the paths below",
+    "_comment4": "===========================================================",
+
+    "sap_input_path": "N:\\SAP_Downloads\\PP29_Readdone",
+    "_sap_input_path_help": "Network drive where SAP auto-downloads the 13 daily .txt files",
+
+    "access_excel_path": "N:\\PurchasePlan_Output",
+    "_access_excel_path_help": "OPTIONAL: Path where MS Access currently saves daily .xls files. Used by consolidate mode to read historical data.",
+
+    "daily_output_path": ".\\output\\daily",
+    "_daily_output_path_help": "Where daily generated Excel files will be saved",
+
+    "consolidated_output_path": ".\\output\\consolidated",
+    "_consolidated_output_path_help": "Where consolidated/comparison Excel files will be saved",
+
+    "db_path": ".\\data\\pp29_history.db",
+    "_db_path_help": "SQLite database for historical data storage",
+
+    "log_path": ".\\logs",
+    "_log_path_help": "Where execution logs are written",
+
+    "num_periods": 16,
+    "_num_periods_help": "Number of future periods to include in output (matching Access pivot)",
+
+    "entities": [
+        "CUS2100ROH",
+        "CUS2100SFPB1",
+        "CUS2100SFPB2",
+        "CUS2100SFPB3",
+        "CUS2100SFPB4",
+        "CUS2100SFPB5A",
+        "CUS2100SFPB5B",
+        "CUS2100SFPB6",
+        "CUS2100SFPB7",
+        "CUS2100SFPB8",
+        "CUS2100SFPR",
+        "CUS2100SFUB",
+        "CUS2100SUB"
+    ],
+    "_entities_help": "The 13 entity codes that SAP exports daily. Used to find matching .txt files."
+}

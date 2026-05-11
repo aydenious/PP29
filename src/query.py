@@ -17,29 +17,13 @@ Look up individual items, compare dates, find changes.
 
 import os
 import sys
-import json
 import argparse
 from typing import List, Dict
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from db import init_database, get_item_history, get_dates_in_db, get_all_data_for_dates
-
-
-def load_config(config_path: str = None) -> dict:
-    if config_path and os.path.exists(config_path):
-        with open(config_path, 'r') as f:
-            return json.load(f)
-    search = [
-        os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.json'),
-        os.path.join(os.getcwd(), 'config.json'),
-    ]
-    for p in search:
-        if os.path.exists(p):
-            with open(p, 'r') as f:
-                return json.load(f)
-    print("ERROR: config.json not found.")
-    sys.exit(1)
+from config import load_config
 
 
 def show_item_history(conn, item_code: str):

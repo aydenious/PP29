@@ -35,7 +35,6 @@ and combines them into a single comparison workbook with:
 import os
 import sys
 import re
-import json
 import argparse
 import logging
 from typing import Dict, List, Optional
@@ -44,26 +43,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from excel_writer import write_consolidated_excel
 from db import init_database, get_all_data_for_dates, get_dates_in_db
-
-
-# ============================================================
-# CONFIG
-# ============================================================
-
-def load_config(config_path: str = None) -> dict:
-    if config_path and os.path.exists(config_path):
-        with open(config_path, 'r') as f:
-            return json.load(f)
-    search = [
-        os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.json'),
-        os.path.join(os.getcwd(), 'config.json'),
-    ]
-    for p in search:
-        if os.path.exists(p):
-            with open(p, 'r') as f:
-                return json.load(f)
-    print("ERROR: config.json not found.")
-    sys.exit(1)
+from config import load_config
 
 
 # ============================================================

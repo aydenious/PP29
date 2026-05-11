@@ -2,24 +2,29 @@
     "_comment": "===========================================================",
     "_comment2": " PP29 Configuration - EDIT THESE PATHS FOR YOUR ENVIRONMENT",
     "_comment3": " Copy this file to config.json and update the paths below",
-    "_comment4": "===========================================================",
+    "_comment4": " Path tips:",
+    "_comment5": "   - Use double backslashes in JSON: C:\\\\Users\\\\name\\\\PP29",
+    "_comment6": "   - Forward slashes also work: C:/Users/name/PP29",
+    "_comment7": "   - ~ expands to the current user's home folder",
+    "_comment8": "   - %USERPROFILE% / $HOME also expand at load time",
+    "_comment9": "===========================================================",
 
-    "sap_input_path": "N:\\SAP_Downloads\\PP29_Readdone",
-    "_sap_input_path_help": "Network drive where SAP auto-downloads the 13 daily .txt files",
+    "sap_input_path": "X:\\SAPIFACE\\PP29",
+    "_sap_input_path_help": "Network drive where SAP auto-downloads the 13 daily .txt files. The script does NOT recurse into PP29_Readdone_* subfolders; point this at the folder where the loose .txt files land.",
 
     "access_excel_path": "N:\\PurchasePlan_Output",
-    "_access_excel_path_help": "OPTIONAL: Path where MS Access currently saves daily .xls files. Used by consolidate mode to read historical data.",
+    "_access_excel_path_help": "OPTIONAL: Path where MS Access currently saves daily .xls files. Used by consolidate --source excel to read historical data.",
 
-    "daily_output_path": ".\\output\\daily",
-    "_daily_output_path_help": "Where daily generated Excel files will be saved",
+    "daily_output_path": "~\\Desktop\\PP29\\output\\daily",
+    "_daily_output_path_help": "Where daily generated Excel files are saved. Example for local drive: '~\\Desktop\\PP29\\output\\daily' resolves to C:\\Users\\<you>\\Desktop\\PP29\\output\\daily",
 
-    "consolidated_output_path": ".\\output\\consolidated",
-    "_consolidated_output_path_help": "Where consolidated/comparison Excel files will be saved",
+    "consolidated_output_path": "~\\Desktop\\PP29\\output\\consolidated",
+    "_consolidated_output_path_help": "Where consolidated/comparison Excel files are saved",
 
-    "db_path": ".\\data\\pp29_history.db",
-    "_db_path_help": "SQLite database for historical data storage",
+    "db_path": "~\\Desktop\\PP29\\data\\pp29_history.db",
+    "_db_path_help": "SQLite database for historical data storage (single file, portable)",
 
-    "log_path": ".\\logs",
+    "log_path": "~\\Desktop\\PP29\\logs",
     "_log_path_help": "Where execution logs are written",
 
     "num_periods": 16,

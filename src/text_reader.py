@@ -227,9 +227,16 @@ def read_daily_files(
             print(f"  [WARN] No file found for {entity} on {date_str}, skipping")
             continue
 
-        # Use the first match (there should be exactly one)
-        filepath = os.path.join(folder_path, matches[0])
-        print(f"  Reading: {matches[0]}")
+        # Filenames are PP29_{entity}_{YYYYMMDD}_{HHMMSS}_{seq}.txt — sorting
+        # lexicographically gives chronological order, so take the last one
+        # in case SAP wrote the same entity twice on the same day.
+        matches.sort()
+        filename = matches[-1]
+        filepath = os.path.join(folder_path, filename)
+        if len(matches) > 1:
+            print(f"  Reading: {filename}  (latest of {len(matches)} for this date)")
+        else:
+            print(f"  Reading: {filename}")
 
         headers, rows = parse_text_file(filepath)
         period_dates = extract_period_columns(headers)

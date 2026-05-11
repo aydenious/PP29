@@ -29,7 +29,6 @@ All paths are read from config.json. Edit config.json to set:
 
 import os
 import sys
-import json
 import logging
 import argparse
 from datetime import datetime, timedelta
@@ -40,38 +39,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from text_reader import read_daily_files
 from excel_writer import write_daily_excel
 from db import init_database, insert_daily_data, log_run
-
-
-# ============================================================
-# CONFIGURATION LOADER
-# ============================================================
-
-def load_config(config_path: str = None) -> dict:
-    """
-    Load configuration from config.json.
-
-    Looks for config.json in:
-      1. The path specified by --config argument
-      2. The script's parent directory (PP29 root)
-      3. The current working directory
-    """
-    if config_path and os.path.exists(config_path):
-        with open(config_path, 'r') as f:
-            return json.load(f)
-
-    # Search for config.json
-    search_paths = [
-        os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.json'),
-        os.path.join(os.getcwd(), 'config.json'),
-    ]
-    for p in search_paths:
-        if os.path.exists(p):
-            with open(p, 'r') as f:
-                return json.load(f)
-
-    print("ERROR: config.json not found. Copy config.example.json to config.json")
-    print("and update the network drive paths.")
-    sys.exit(1)
+from config import load_config
 
 
 # ============================================================

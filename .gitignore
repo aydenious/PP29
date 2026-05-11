@@ -3,6 +3,10 @@ __pycache__/
 *.pyc
 *.pyo
 
+# Setup diagnostics
+setup.log
+get-pip.py
+
 # Portable Python runtime (created by setup.bat in-place)
 python.exe
 pythonw.exe

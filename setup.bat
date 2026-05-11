@@ -2,12 +2,21 @@
 setlocal enabledelayedexpansion
 cd /d "%~dp0"
 
+REM Logging: capture every step so we can diagnose if the window
+REM closes unexpectedly. Tail this file if setup vanishes.
+set "LOG=%~dp0setup.log"
+echo === PP29 Setup started %DATE% %TIME% === > "%LOG%"
+echo Working dir: %CD% >> "%LOG%"
+echo User: %USERNAME% >> "%LOG%"
+echo. >> "%LOG%"
+
 echo.
 echo ============================================================
 echo   PP29 Portable Runtime Setup
 echo   This installs Python + dependencies into this folder.
 echo   No admin rights needed. No system-wide changes.
 echo   Internet connection required for download.
+echo   Progress log: %LOG%
 echo ============================================================
 echo.
 
@@ -28,12 +37,16 @@ REM ============================================================
 
 :start_download
 
-REM Try multiple Python versions (newest first)
-set "PY_VERSIONS=3.13.9 3.13.8 3.13.7 3.13.6 3.13.5 3.13.4 3.13.3 3.13.2 3.13.1 3.13.0 3.12.9 3.12.8 3.12.7"
+REM Try a small list of known-good Python 3.13 versions. We attempt
+REM curl first (fast, ships with Win10 1803+) and fall back to
+REM PowerShell with the progress bar disabled (the default progress
+REM bar makes Invoke-WebRequest unusably slow on large files).
+set "PY_VERSIONS=3.13.1 3.13.0 3.13.2 3.13.3 3.12.8 3.12.7"
 set "DOWNLOADED="
 
 echo.
 echo Step 1: Downloading Python embeddable...
+echo Step 1 started %TIME% >> "%LOG%"
 echo.
 
 for %%v in (%PY_VERSIONS%) do (
@@ -41,28 +54,38 @@ for %%v in (%PY_VERSIONS%) do (
         set "URL=https://www.python.org/ftp/python/%%v/python-%%v-embed-amd64.zip"
         set "ZIP=python-%%v-embed-amd64.zip"
 
-        echo Trying: !URL!
+        echo   Trying Python %%v...
+        echo   Trying Python %%v from !URL! >> "%LOG%"
 
-        REM Try PowerShell first (built into Windows)
-        powershell -NoProfile -Command "& { try { Invoke-WebRequest -Uri '!URL!' -OutFile '!ZIP!' -UseBasicParsing; exit 0 } catch { exit 1 } }" >nul 2>&1
-        if !errorlevel! equ 0 (
-            if exist "!ZIP!" (
-                echo   Downloaded successfully.
+        REM Try curl first (fast, no progress-bar overhead)
+        curl -L --fail --silent --show-error -o "!ZIP!" "!URL!" 2>>"%LOG%"
+        if exist "!ZIP!" (
+            REM Verify it's a real zip, not a 4XX error page (real file > 1 MB)
+            for %%f in ("!ZIP!") do set "FSIZE=%%~zf"
+            if !FSIZE! gtr 1000000 (
+                echo     OK: downloaded !ZIP! (!FSIZE! bytes via curl)
+                echo     curl OK: !ZIP! !FSIZE! bytes >> "%LOG%"
                 set "DOWNLOADED=!ZIP!"
                 set "PY_VER=%%v"
+            ) else (
+                echo     curl returned small/error file, retrying with PowerShell...
+                echo     curl returned !FSIZE! bytes, deleting >> "%LOG%"
+                del "!ZIP!" 2>nul
             )
         )
 
-        REM Fallback: try curl (available in modern Windows 10/11)
+        REM Fallback: PowerShell with progress bar disabled (critical for speed)
         if not defined DOWNLOADED (
-            curl -s -o "!ZIP!" "!URL!" 2>nul
+            powershell -NoProfile -Command "$ProgressPreference='SilentlyContinue'; try { Invoke-WebRequest -Uri '!URL!' -OutFile '!ZIP!' -UseBasicParsing -ErrorAction Stop; exit 0 } catch { exit 1 }" 2>>"%LOG%"
             if exist "!ZIP!" (
-                powershell -NoProfile -Command "if ((Get-Item '!ZIP!').Length -gt 100000) { exit 0 } else { exit 1 }" >nul 2>&1
-                if !errorlevel! equ 0 (
-                    echo   Downloaded successfully.
+                for %%f in ("!ZIP!") do set "FSIZE=%%~zf"
+                if !FSIZE! gtr 1000000 (
+                    echo     OK: downloaded !ZIP! (!FSIZE! bytes via PowerShell)
+                    echo     PowerShell OK: !ZIP! !FSIZE! bytes >> "%LOG%"
                     set "DOWNLOADED=!ZIP!"
                     set "PY_VER=%%v"
                 ) else (
+                    echo     PowerShell returned !FSIZE! bytes — too small, deleting >> "%LOG%"
                     del "!ZIP!" 2>nul
                 )
             )
@@ -80,6 +103,9 @@ if not defined DOWNLOADED (
     echo   - No internet access
     echo   - Company firewall blocking python.org
     echo   - Corporate proxy not configured
+    echo   - Antivirus blocking the downloaded zip
+    echo.
+    echo See %LOG% for the exact errors from curl/PowerShell.
     echo.
     echo MANUAL SETUP:
     echo   1. On a machine with internet, download from:
@@ -88,6 +114,7 @@ if not defined DOWNLOADED (
     echo   3. Place the zip file in this folder: %~dp0
     echo   4. Re-run this setup.bat
     echo.
+    echo === DOWNLOAD FAILED %DATE% %TIME% === >> "%LOG%"
     pause
     exit /b 1
 )
@@ -98,9 +125,11 @@ REM ============================================================
 
 echo.
 echo Step 2: Extracting Python...
-powershell -NoProfile -Command "Expand-Archive -Force -Path '%DOWNLOADED%' -DestinationPath '%~dp0'"
+echo Step 2 started %TIME%, extracting %DOWNLOADED% >> "%LOG%"
+powershell -NoProfile -Command "$ProgressPreference='SilentlyContinue'; Expand-Archive -Force -Path '%DOWNLOADED%' -DestinationPath '%~dp0'" 2>>"%LOG%"
 if %errorlevel% neq 0 (
     echo ERROR: Failed to extract Python archive.
+    echo See %LOG% for details.
     pause
     exit /b 1
 )
@@ -188,13 +217,15 @@ REM ============================================================
 echo.
 echo Step 4: Installing pip...
 
-REM Download get-pip.py
-powershell -NoProfile -Command "& { try { Invoke-WebRequest -Uri 'https://bootstrap.pypa.io/get-pip.py' -OutFile 'get-pip.py' -UseBasicParsing; exit 0 } catch { exit 1 } }" >nul 2>&1
+REM Download get-pip.py — curl first (fast), PowerShell as fallback
+echo Step 4 started %TIME% >> "%LOG%"
+curl -L --fail --silent --show-error -o get-pip.py https://bootstrap.pypa.io/get-pip.py 2>>"%LOG%"
 if not exist get-pip.py (
-    curl -s -o get-pip.py https://bootstrap.pypa.io/get-pip.py 2>nul
+    powershell -NoProfile -Command "$ProgressPreference='SilentlyContinue'; try { Invoke-WebRequest -Uri 'https://bootstrap.pypa.io/get-pip.py' -OutFile 'get-pip.py' -UseBasicParsing -ErrorAction Stop; exit 0 } catch { exit 1 }" 2>>"%LOG%"
 )
 if not exist get-pip.py (
     echo ERROR: Could not download get-pip.py.
+    echo See %LOG% for details.
     pause
     exit /b 1
 )
@@ -214,14 +245,16 @@ REM ============================================================
 
 echo.
 echo Step 5: Installing openpyxl and xlrd...
-python.exe -m pip install --no-warn-script-location openpyxl xlrd
+echo Step 5 started %TIME% >> "%LOG%"
+python.exe -m pip install --no-warn-script-location openpyxl xlrd 2>>"%LOG%"
 if %errorlevel% neq 0 (
     echo ERROR: Package installation failed.
-    echo Check internet connection and try again.
+    echo See %LOG% for the pip error.
     pause
     exit /b 1
 )
 echo   Packages installed.
+echo Step 5 OK %TIME% >> "%LOG%"
 
 REM ============================================================
 REM  STEP 6: Verify installation
@@ -278,6 +311,7 @@ echo     run_query.bat        - Interactive query menu
 echo.
 echo   Make sure you've edited config.json with your paths!
 echo ============================================================
+echo === SETUP COMPLETE %DATE% %TIME% === >> "%LOG%"
 
 :done
 pause

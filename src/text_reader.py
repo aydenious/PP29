@@ -114,10 +114,14 @@ def aggregate_item_rows(rows: List[Dict], period_dates: List[str]) -> List[Dict]
 
     Returns one row per unique item.
     """
-    # Group rows by item code
+    # Group rows by item code. SAP zero-pads material numbers to 18 chars
+    # (e.g. '000000000030001144'); strip the leading zeros to match Access's
+    # text-stored ItemCodes (e.g. '30001144').
     item_groups: Dict[str, List[Dict]] = {}
     for row in rows:
-        item_code = row.get('Item code', '').strip()
+        item_code = row.get('Item code', '').strip().lstrip('0')
+        if not item_code:
+            continue  # skip all-zero / blank rows
         if item_code not in item_groups:
             item_groups[item_code] = []
         item_groups[item_code].append(row)

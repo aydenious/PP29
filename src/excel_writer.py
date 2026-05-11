@@ -144,8 +144,10 @@ def write_daily_excel(
     for n in range(4, 21):
         ordinal_suffixes[n] = f'{n}th'
 
-    pivot_cols_base = ['SubGroup', 'ItemCode', 'Desc', 'UnitPrc',
-                       'blpr', 'blpo', 'blpl', 'blnorm', 'blsvr']
+    # Match Access Sheet4 header row exactly: 'Sub group' (with space),
+    # 'Itemcode' (lowercase c), and only 3 balance columns (no blnorm/blsvr).
+    pivot_cols_base = ['Sub group', 'Itemcode', 'Desc', 'UnitPrc',
+                       'blpr', 'blpo', 'blpl']
     pivot_cols_period = []
 
     for pn in range(1, min(len(period_dates) + 1, 17)):  # up to 16 periods
@@ -174,12 +176,12 @@ def write_daily_excel(
         ws_pivot.cell(row=r, column=3, value=item.get('Description', ''))
         ws_pivot.cell(row=r, column=4, value=item.get('UnitPrice', 0.0))
 
-        # Balance
-        for ci, bl_key in enumerate(['BL_PR', 'BL_PO', 'BL_PL', 'BL_NORM', 'BL_SVR']):
+        # Balance (3 cols, matching Access: blpr, blpo, blpl)
+        for ci, bl_key in enumerate(['BL_PR', 'BL_PO', 'BL_PL']):
             ws_pivot.cell(row=r, column=5 + ci, value=item.get(bl_key, 0.0))
 
-        # Period data — map text periods to pivot periods
-        pc = 10  # column index for first period data
+        # Period data — first period starts at column 8 (4 identity + 3 balance + 1)
+        pc = 8
         for pn, pd in enumerate(period_dates[:16]):  # max 16 periods
             text_map = {
                 'pr': item.get(f'{pd}_PR', 0.0),

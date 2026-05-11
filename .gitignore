@@ -3,19 +3,32 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Output files
+# Portable Python runtime (created by setup.bat in-place)
+python.exe
+pythonw.exe
+python*.dll
+vcruntime*.dll
+libcrypto-*.dll
+libssl-*.dll
+libffi-*.dll
+python3*.zip
+python3*._pth
+get-pip.py
+Lib/
+Scripts/
+DLLs/
+Include/
+
+# Runtime data (created at first run)
+data/
 output/
+logs/
+
+# Generated Excel files
 *.xlsx
 *.xls
 
-# Database
-data/*.db
-
-# Logs
-logs/
-*.log
-
-# Config (may contain local paths)
+# Config (contains local network paths)
 config.json
 
 # IDE

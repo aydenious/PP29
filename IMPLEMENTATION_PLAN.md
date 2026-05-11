@@ -140,17 +140,21 @@ Network Drive — 13 .txt files/day
 
 ### Portable Python Runtime (Zero Installation)
 
+The project folder is the deployable unit — copy it to a machine, run `setup.bat`,
+and the portable Python runtime is installed in-place. All runtime artifacts
+(python.exe, Lib/, data/, output/, logs/) are gitignored.
+
 ```
-PP29_Tool/                          ← single folder on network drive or USB
-├── python.exe                      ← Python embeddable (Windows)
-├── python3xx.zip                   ← standard library
-├── python3xx._pth                  ← site-packages path config
+PP29/                               ← single folder on network drive or USB
+├── setup.bat                       ← one-time: downloads Python embeddable
+├── fix_pth.bat                     ← repair ._pth if setup leaves it broken
+├── python.exe                      ← Python embeddable (after setup)
+├── python3xx.zip                   ← standard library (after setup)
+├── python3xx._pth                  ← site-packages path config (after setup)
 ├── Lib/
-│   └── site-packages/
-│       ├── openpyxl/               ← Excel .xlsx read/write
-│       ├── xlrd/                   ← Excel .xls read (old format)
-│       └── et_xmlfile/             ← openpyxl dependency
-├── config.json                     ← user-editable paths/settings
+│   └── site-packages/              ← openpyxl, xlrd, et_xmlfile (after setup)
+├── config.example.json             ← template
+├── config.json                     ← user-editable paths (gitignored)
 ├── src/
 │   ├── daily.py                    ← daily generator (replaces Access)
 │   ├── consolidate.py              ← multi-date consolidation
@@ -159,10 +163,12 @@ PP29_Tool/                          ← single folder on network drive or USB
 │   ├── excel_writer.py             ← write formatted .xlsx
 │   └── db.py                       ← SQLite read/write
 ├── data/
-│   └── pp29_history.db             ← SQLite historical database
-├── output/                         ← generated files land here
-├── logs/                           ← execution logs
-└── run_daily.bat                   ← double-click to run daily
+│   └── pp29_history.db             ← SQLite historical database (runtime)
+├── output/                         ← generated files land here (runtime)
+├── logs/                           ← execution logs (runtime)
+├── run_daily.bat                   ← double-click to run daily
+├── run_consolidate.bat             ← double-click for multi-date comparison
+└── run_query.bat                   ← interactive query menu
 ```
 
 ### Config File (`config.json`)

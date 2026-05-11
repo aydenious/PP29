@@ -49,20 +49,24 @@ def show_item_history(conn, item_code: str):
         print(f"No data found for item: {item_code}")
         return
 
+    first = rows[0]
     print(f"\n{'='*80}")
     print(f"Item: {item_code}")
-    print(f"Description: {rows[0][2]}")
-    print(f"Type: {rows[0][3]} | MRP: {rows[0][4]} | Price: {rows[0][5]} | UoM: {rows[0][6]}")
+    print(f"Description: {first['description']}")
+    print(f"Type: {first['material_type']} | MRP: {first['mrp_controller']} | "
+          f"Price: {first['unit_price']} | UoM: {first['uom']}")
     print(f"{'='*80}")
 
-    dates = sorted(set(r[0] for r in rows))
+    dates = sorted(set(r['date'] for r in rows))
     print(f"\nDates available: {', '.join(dates)}")
     print(f"\n{'Date':<12} {'Period':<10} {'PR':>10} {'PO':>10} {'NORM':>10} {'ESTCB':>10} {'AMOUNT':>12}")
     print("-" * 75)
 
     for r in rows:
-        print(f"{r[0]:<12} {r[7]:<10} {r[8]:>10.0f} {r[9]:>10.0f} "
-              f"{r[11]:>10.0f} {r[12]:>10.0f} {r[13]:>12.2f}")
+        print(f"{r['date']:<12} {r['period_date']:<10} "
+              f"{(r['pr'] or 0):>10.0f} {(r['po'] or 0):>10.0f} "
+              f"{(r['norm'] or 0):>10.0f} {(r['estcb'] or 0):>10.0f} "
+              f"{(r['amount'] or 0):>12.2f}")
 
 
 def compare_items(conn, item_code: str, dates: List[str]):
@@ -72,32 +76,41 @@ def compare_items(conn, item_code: str, dates: List[str]):
         return
 
     all_rows = get_item_history(conn, item_code)
-    rows_d1 = [r for r in all_rows if r[0] == dates[0]]
-    rows_d2 = [r for r in all_rows if r[0] == dates[1]]
+    rows_d1 = [r for r in all_rows if r['date'] == dates[0]]
+    rows_d2 = [r for r in all_rows if r['date'] == dates[1]]
 
+    if not rows_d1 and not rows_d2:
+        print(f"No data found for item {item_code} on either date.")
+        return
+
+    desc = rows_d1[0]['description'] if rows_d1 else rows_d2[0]['description']
     print(f"\n{'='*80}")
-    print(f"Item: {item_code} — {rows_d1[0][2] if rows_d1 else 'N/A'}")
+    print(f"Item: {item_code} — {desc}")
     print(f"Comparing: {dates[0]} → {dates[1]}")
     print(f"{'='*80}")
 
-    # Build lookup by period
-    d1_by_period = {r[7]: r for r in rows_d1}
-    d2_by_period = {r[7]: r for r in rows_d2}
+    d1_by_period = {r['period_date']: r for r in rows_d1}
+    d2_by_period = {r['period_date']: r for r in rows_d2}
 
-    all_periods = sorted(set(list(d1_by_period.keys()) + list(d2_by_period.keys())))
+    all_periods = sorted(set(d1_by_period.keys()) | set(d2_by_period.keys()))
 
     print(f"{'Period':<10} {'D1_PO':>10} {'D2_PO':>10} {'Delta':>10} "
           f"{'D1_ESTCB':>12} {'D2_ESTCB':>12} {'DeltaCB':>12}")
     print("-" * 80)
 
+    empty = {'po': 0, 'estcb': 0}
     for pd in all_periods:
-        d1 = d1_by_period.get(pd, [0]*14)
-        d2 = d2_by_period.get(pd, [0]*14)
-        delta_po = (d2[9] or 0) - (d1[9] or 0)
-        delta_cb = (d2[12] or 0) - (d1[12] or 0)
+        d1 = d1_by_period.get(pd, empty)
+        d2 = d2_by_period.get(pd, empty)
+        d1_po = d1.get('po', 0) or 0
+        d2_po = d2.get('po', 0) or 0
+        d1_cb = d1.get('estcb', 0) or 0
+        d2_cb = d2.get('estcb', 0) or 0
+        delta_po = d2_po - d1_po
+        delta_cb = d2_cb - d1_cb
         marker = ' ◄' if abs(delta_po) > 0.01 or abs(delta_cb) > 0.01 else ''
-        print(f"{pd:<10} {(d1[9] or 0):>10.0f} {(d2[9] or 0):>10.0f} "
-              f"{delta_po:>+10.0f} {(d1[12] or 0):>12.0f} {(d2[12] or 0):>12.0f} "
+        print(f"{pd:<10} {d1_po:>10.0f} {d2_po:>10.0f} "
+              f"{delta_po:>+10.0f} {d1_cb:>12.0f} {d2_cb:>12.0f} "
               f"{delta_cb:>+12.0f}{marker}")
 
 

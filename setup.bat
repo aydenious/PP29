@@ -270,10 +270,11 @@ echo ============================================================
 echo   SETUP COMPLETE
 echo ============================================================
 echo.
-echo   PP29_Tool is ready to use:
+echo   PP29 is ready to use:
 echo.
-echo     run_daily.bat       - Generate today's Purchase Plan
+echo     run_daily.bat        - Generate today's Purchase Plan
 echo     run_consolidate.bat  - Compare all dates
+echo     run_query.bat        - Interactive query menu
 echo.
 echo   Make sure you've edited config.json with your paths!
 echo ============================================================

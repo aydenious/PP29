@@ -224,6 +224,14 @@ def get_dates_in_db(conn: sqlite3.Connection) -> List[str]:
     return [r[0] for r in rows]
 
 
+ITEM_HISTORY_COLUMNS = [
+    'date', 'item_code', 'description', 'material_type',
+    'mrp_controller', 'unit_price', 'uom',
+    'period_date', 'pr', 'po', 'pl', 'norm', 'svr',
+    'estcb', 'amount', 'ratio',
+]
+
+
 def get_item_history(
     conn: sqlite3.Connection,
     item_code: str
@@ -231,7 +239,7 @@ def get_item_history(
     """
     Get all dates/periods for a specific item.
 
-    Returns rows with: date, period_date, pr, po, pl, norm, svr, estcb, amount, ratio
+    Returns list of dicts keyed by ITEM_HISTORY_COLUMNS.
     """
     rows = conn.execute("""
         SELECT
@@ -245,11 +253,7 @@ def get_item_history(
         ORDER BY r.date, p.period_date
     """, (item_code,)).fetchall()
 
-    return [dict(zip([d[0] for d in rows[0].__class__.__dict__ if False] or
-                     ['date','item_code','description','material_type',
-                      'mrp_controller','unit_price','uom','period_date',
-                      'pr','po','pl','norm','svr','estcb','amount','ratio'],
-                     row)) for row in rows]
+    return [dict(zip(ITEM_HISTORY_COLUMNS, row)) for row in rows]
 
 
 def get_all_data_for_dates(

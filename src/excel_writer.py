@@ -201,7 +201,8 @@ def write_daily_excel(
                     pc += 1
             elif pn == 1:  # 2nd period
                 for m in PERIOD2_METRICS:
-                    ws_pivot.cell(row=r, column=pc, value=text_map.get(m if m != 'sugg' else 'pr', 0.0) if m != 'sugg' else text_map.get('pr', 0.0))
+                    key = 'pr' if m == 'sugg' else m
+                    ws_pivot.cell(row=r, column=pc, value=text_map.get(key, 0.0))
                     pc += 1
             else:  # 3rd-16th
                 for m in PERIODN_METRICS:

@@ -170,10 +170,15 @@ def write_daily_excel(
     for i, item in enumerate(items):
         r = i + 2
 
-        # Base columns
-        ws_pivot.cell(row=r, column=1, value=item.get('MRPController', ''))
+        # Base columns. "Sub group" is the first whitespace-separated token
+        # of Description (e.g. 'HBNX30 CONNECTOR CAP...' -> 'HBNX30'). Access
+        # populates this on the first row only; we fill every row for
+        # usable filtering/grouping.
+        desc = item.get('Description', '')
+        sub_group = desc.split(None, 1)[0] if desc.strip() else ''
+        ws_pivot.cell(row=r, column=1, value=sub_group)
         ws_pivot.cell(row=r, column=2, value=item.get('ItemCode', ''))
-        ws_pivot.cell(row=r, column=3, value=item.get('Description', ''))
+        ws_pivot.cell(row=r, column=3, value=desc)
         ws_pivot.cell(row=r, column=4, value=item.get('UnitPrice', 0.0))
 
         # Balance (3 cols, matching Access: blpr, blpo, blpl)

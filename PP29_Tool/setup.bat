@@ -126,17 +126,60 @@ if not defined PTH_FILE (
 
 echo   Found: %PTH_FILE%
 
-REM Write the correct _pth configuration
-(
-    echo python3!PY_VER:~0,1!!PY_VER:~2,2!.zip
-    echo .
-    echo Lib\site-packages
-    echo.
-    echo # Uncomment to run site.main^(^) automatically
-    echo import site
-) > "%PTH_FILE%"
+REM Verify the stdlib zip exists before we touch anything
+set "ZIP_FOUND="
+for %%f in (python3*.zip) do set "ZIP_FOUND=%%f"
+if not defined ZIP_FOUND (
+    echo ERROR: python3xx.zip not found. Extraction may have failed.
+    echo Try re-extracting the embeddable zip manually.
+    pause
+    exit /b 1
+)
+echo   Stdlib: %ZIP_FOUND%
+
+REM Instead of rewriting the ._pth from scratch (which can break the
+REM zip reference), we edit the original in-place. The original already
+REM has the correct zip filename. We just need to:
+REM   1. Uncomment "import site"
+REM   2. Add "Lib\site-packages" before the import site line
+
+REM Use PowerShell for reliable in-place editing
+powershell -NoProfile -Command ^
+    "$pth = Get-Content '%PTH_FILE%' -Raw; " ^
+    "$pth = $pth -replace '#import site', 'import site'; " ^
+    "if ($pth -notmatch 'Lib\\\\site-packages') { " ^
+    "    $pth = $pth -replace 'import site', 'Lib\site-packages' + \"`r`n\" + 'import site' " ^
+    "}; " ^
+    "Set-Content '%PTH_FILE%' -Value $pth -NoNewline"
+
+if %errorlevel% neq 0 (
+    echo ERROR: Failed to configure %PTH_FILE%.
+    pause
+    exit /b 1
+)
 
 echo   Configured %PTH_FILE% for site-packages support.
+
+REM Quick sanity check: can python even start?
+echo   Testing python...
+python.exe -c "print('ok')" >nul 2>&1
+if %errorlevel% neq 0 (
+    echo ERROR: python.exe starts but crashes - likely a ._pth issue.
+    echo Let me restore the original ._pth and try a different approach...
+    powershell -NoProfile -Command ^
+        "$pth = Get-Content '%PTH_FILE%' -Raw; " ^
+        "$pth = $pth -replace 'Lib\\\\site-packages\r?\n?', ''; " ^
+        "$pth = $pth -replace 'import site', '#import site'; " ^
+        "Set-Content '%PTH_FILE%' -Value $pth -NoNewline"
+    echo.
+    echo Please report the exact error above. In the meantime,
+    echo try running python.exe manually to see the error:
+    echo   cd /d %~dp0
+    echo   python.exe -c "print('hello')"
+    pause
+    exit /b 1
+)
+echo   python.exe works.
 
 REM ============================================================
 REM  STEP 4: Install pip
